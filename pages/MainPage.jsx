@@ -1,11 +1,19 @@
 import { StatusBar } from "expo-status-bar"
-import { StyleSheet, Text, View, ActivityIndicator } from "react-native"
-import { Item } from "./components/Item"
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native"
+import { Item } from "../components/Item"
 import axios from "axios"
 import React from "react"
 import { useEffect, useState } from "react"
-import MainPage from "./pages/MainPage"
-import { Navigation } from "./pages/Navigation"
+import { axiosInstance } from "../API"
+
 const OptionsMock = [
   {
     id: 1,
@@ -75,37 +83,92 @@ const OptionsMock = [
   },
 ]
 
-export default function App() {
-  // const [items, setItems] = useState([])
-  // const [loading, setIsLoading] = useState(false)
+export const MainPage = ({ navigation }) => {
+  const [items, setItems] = useState([])
+  const [loading, setIsLoading] = useState(false)
 
-  // const fetchItems = () => {
-  //   setIsLoading(true)
-  //   setTimeout(() => {
-  //     setItems(OptionsMock)
-  //     setIsLoading(false)
-  //   }, 2000)
-  // }
-  // useEffect(() => {
-  //   fetchItems()
-  // }, [])
+  //   const fetchItems = () => {
+  //     setIsLoading(true)
+  //     setTimeout(() => {
+  //       setItems(OptionsMock)
+  //       setIsLoading(false)
+  //     }, 2000)
+  //   }
 
-  // if (loading) {
-  //   return (
-  //     <View
-  //       style={{
-  //         flex: 1,
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //       }}
-  //     >
-  //       <ActivityIndicator size="large" />
-  //       <Text>Loading...</Text>
-  //     </View>
-  //   )
-  // }
+  const fetchItems = () => {
+    setIsLoading(true)
+    axiosInstance
+      .get("/options")
+      .then(({ data }) => {
+        const updatedOptions = data.options.map((opt) => {
+          if (opt.image) {
+            return {
+              ...opt,
+              image: opt.image.replace("localhost", "172.20.10.3"),
+            }
+          } else {
+            return opt
+          }
+        })
+        setItems(updatedOptions)
+      })
+      .catch((err) => {
+        alert(err)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }
 
-  return <Navigation />
+  useEffect(() => {
+    fetchItems()
+  }, [])
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" />
+        <Text>Loading...</Text>
+      </View>
+    )
+  }
+
+  return (
+    <View style={{ marginTop: 20 }}>
+      <FlatList
+        data={items}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchItems} />
+        }
+        renderItem={({ item }) => {
+          return (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("InfoPage", {
+                  id: item.id,
+                  title: item.title,
+                })
+              }
+            >
+              <Item
+                key={item.id}
+                title={item.title}
+                category={item.category}
+                image={item.image}
+                price={item.price}
+              />
+            </TouchableOpacity>
+          )
+        }}
+      />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -116,3 +179,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 })
+
+export default MainPage

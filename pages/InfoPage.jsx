@@ -1,11 +1,33 @@
-import { StatusBar } from "expo-status-bar"
-import { StyleSheet, Text, View, ActivityIndicator } from "react-native"
-import { Item } from "./components/Item"
-import axios from "axios"
 import React from "react"
-import { useEffect, useState } from "react"
-import MainPage from "./pages/MainPage"
-import { Navigation } from "./pages/Navigation"
+import styled from "styled-components/native"
+import { Text, View, ActivityIndicator } from "react-native"
+import { axiosInstance } from "../API"
+const PostImage = styled.Image`
+  border-radius: 10px;
+  width: 100%;
+  height: 250px;
+  margin-bottom: 20px;
+`
+
+const PostTitle = styled.Text`
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 34px;
+`
+const PostDescription = styled.Text`
+  font-size: 18px;
+  line-height: 24px;
+  color: grey;
+`
+const PostPrice = styled.Text`
+  color: #33cccc;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 24px;
+`
+
 const OptionsMock = [
   {
     id: 1,
@@ -75,44 +97,61 @@ const OptionsMock = [
   },
 ]
 
-export default function App() {
-  // const [items, setItems] = useState([])
-  // const [loading, setIsLoading] = useState(false)
+export const InfoPage = ({ route, navigation }) => {
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [data, setData] = React.useState()
+  const { id, title } = route.params
 
-  // const fetchItems = () => {
-  //   setIsLoading(true)
-  //   setTimeout(() => {
-  //     setItems(OptionsMock)
-  //     setIsLoading(false)
-  //   }, 2000)
-  // }
-  // useEffect(() => {
-  //   fetchItems()
-  // }, [])
+  const fetchOption = () => {
+    navigation.setOptions({
+      title,
+    })
 
-  // if (loading) {
-  //   return (
-  //     <View
-  //       style={{
-  //         flex: 1,
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //       }}
-  //     >
-  //       <ActivityIndicator size="large" />
-  //       <Text>Loading...</Text>
-  //     </View>
-  //   )
-  // }
+    axiosInstance
+      .get(`/options/` + `${id}`)
+      .then(({ data }) => {
+        setData(data)
+      })
+      .catch((err) => {
+        console.log(err)
+        alert("Ошибка, не удалось получить статью")
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }
 
-  return <Navigation />
+  React.useEffect(() => {
+    fetchOption()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" />
+        <Text>Loading...</Text>
+      </View>
+    )
+  }
+
+  return (
+    <View style={{ padding: 20 }}>
+      <PostImage
+        source={{
+          uri: data.image.replace("localhost", "172.20.10.3"),
+        }}
+      />
+      <PostTitle>{data.title}</PostTitle>
+      <PostPrice>{data.price} $</PostPrice>
+      <PostDescription>{data.description}</PostDescription>
+    </View>
+  )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-})
+export default InfoPage
