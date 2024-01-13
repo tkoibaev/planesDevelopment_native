@@ -32,13 +32,12 @@ interface MainScreenProps {
 
 const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   const [options, setOptions] = useState<OptionData[]>([])
-  const [filteredOptions, setFilteredOptions] = useState<OptionData[]>([])
-  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchOptionQuery, setSearchOptionQuery] = useState<string>("")
 
   const getOptions = async () => {
     try {
       const response = await axios(
-        `http://172.20.10.3:8000/options/?search=${searchQuery}`,
+        `http://172.20.10.3:8000/options/?search=${searchOptionQuery}`,
         {
           method: "GET",
         }
@@ -52,7 +51,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         image: raw.image ? raw.image.replace("localhost", "172.20.10.3") : "dd",
         category: raw.category,
       }))
-      setFilteredOptions(newArr)
+      setOptions(newArr)
     } catch (e) {
       throw e
     }
@@ -60,7 +59,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     getOptions()
-  }, [searchQuery, options])
+  }, [searchOptionQuery, options])
 
   const handleDetailsPress = (subscription: OptionData) => {
     console.log("Details Pressed:", subscription.title)
@@ -86,14 +85,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Поиск по категории"
-        onChangeText={(text) => setSearchQuery(text)}
-        value={searchQuery}
+        onChangeText={(text) => setSearchOptionQuery(text)}
+        value={searchOptionQuery}
       />
       <View style={{ flex: 1 }}>
         <FlatList
           contentContainerStyle={styles.aaa}
           // style={styles.aaa}
-          data={filteredOptions}
+          data={options}
           renderItem={renderSubscriptionCard}
           keyExtractor={(item) => item.id.toString()}
         ></FlatList>

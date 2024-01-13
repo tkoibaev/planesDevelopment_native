@@ -31,9 +31,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   navText: {
-    color: "white", // Темно-серый цвет текста
+    color: "white",
     fontSize: 18,
-    marginTop: 50, // Расстояние между текстом и кнопкой
+    marginTop: 50,
     textAlign: "center",
     backgroundColor: "#33cccc",
   },
